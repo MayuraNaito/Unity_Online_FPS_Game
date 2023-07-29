@@ -1954,7 +1954,7 @@ GameObject:
   - component: {fileID: 3422510400107407703}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1975,7 +1975,7 @@ Transform:
   - {fileID: 637497219207479298}
   - {fileID: 3897032490284021488}
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &7776020188761213090
 MeshFilter:
@@ -2114,6 +2114,7 @@ MonoBehaviour:
   - {fileID: 8368066994625161859}
   - {fileID: 6074614965050078335}
   - {fileID: 6419315481631335331}
+  maxHP: 100
 --- !u!114 &1933236562686491872
 MonoBehaviour:
   m_ObjectHideFlags: 0

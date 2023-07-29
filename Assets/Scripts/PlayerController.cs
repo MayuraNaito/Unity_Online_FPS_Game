@@ -63,6 +63,10 @@ public class PlayerController : MonoBehaviourPunCallbacks
     public GameObject[] playerModel;
     // 銃ホルダー(自分用、他人用)
     public Gun[] gunsHolder, otherGunsHolder;
+    // 最大HP
+    public int maxHP = 100;
+    // 現在HP
+    private int currentHP;
 
     private void Awake()
     {
@@ -75,6 +79,9 @@ public class PlayerController : MonoBehaviourPunCallbacks
     // Start
     private void Start()
     {
+        // 現在HPに最大HPを代入
+        currentHP = maxHP;
+
         // カメラ格納
         cam = Camera.main;
         // 剛体
@@ -368,15 +375,28 @@ public void PlayerMove()
         // カメラの中心から光線を作る
         Ray ray = cam.ViewportPointToRay(new Vector2(0.5f, 0.5f));
 
+        // 何かにレーザーが当たったらtrue
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
             //Debug.Log("当たったオブジェクトは" + hit.collider.gameObject.name);
-            // 弾痕を当たった場所に生成
-            GameObject bulletImpactObject = Instantiate(guns[selectedGun].bulletImpact,
-                hit.point + (hit.normal * 0.02f),
-                Quaternion.LookRotation(hit.normal, Vector3.up));
 
-            Destroy(bulletImpactObject, 10f);
+            // レーザーの当たったオブジェクトがプレイヤーならtrue
+            if (hit.collider.gameObject.tag == "Player")
+            {
+                hit.collider.gameObject.GetPhotonView().RPC("Hit",
+                    RpcTarget.All,
+                    guns[selectedGun].shootDamage,
+                    photonView.Owner.NickName,
+                    PhotonNetwork.LocalPlayer.ActorNumber);
+            } else
+            {
+                // プレイヤー以外に当たったら弾痕を当たった場所に生成
+                GameObject bulletImpactObject = Instantiate(guns[selectedGun].bulletImpact,
+                    hit.point + (hit.normal * 0.02f),
+                    Quaternion.LookRotation(hit.normal, Vector3.up));
+
+                Destroy(bulletImpactObject, 10f);
+            }
         }
 
         // 射撃間隔の設定　ゲームの経過時間にインターバルを足しshotTimerに入れる(連続で撃てなくなる)
@@ -439,6 +459,40 @@ public void PlayerMove()
 
             SwitchGun();
         }
+    }
+
+    // 被弾関数(全プレイヤー共有)
+    [PunRPC] // 他のユーザーからも呼び出し可能になる
+    public void Hit(int damage, string name, int actor)
+    {
+        // HPを減らす関数の呼び出し
+        ReceiveDamage(name, damage, actor);
+    }
+
+    // HPを減らす関数
+    public void ReceiveDamage(string name, int damage, int actor)
+    {
+        // プレイヤーの管理者が自分かどうか(撃たれたのが自分かどうか)
+        if (photonView.IsMine)
+        {
+            // HPを減らす
+            currentHP -= damage;
+
+            // 0以下になったか判定をする
+            if (currentHP <= 0)
+            {
+                // 死亡関数の呼び出し
+                Death(name, actor);
+            }
+        }
+    }
+
+    // 死亡関数
+    public void Death(string name, int actor)
+    {
+        // マイナスになってるかもしれないので0にする
+        currentHP = 0;
+        Debug.Log("死亡したよ");
     }
 
 }
