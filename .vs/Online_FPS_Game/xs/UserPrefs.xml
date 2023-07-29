@@ -3,10 +3,10 @@
     <Files>
       <File FileName="Assets/Scripts/PhotonManager.cs" Line="399" Column="46" />
       <File FileName="Assets/Scripts/GameManager.cs" Line="8" Column="2" />
-      <File FileName="Assets/Scripts/PlayerController.cs" Line="111" Column="21" />
+      <File FileName="Assets/Scripts/PlayerController.cs" Line="111" Column="17" />
       <File FileName="Assets/Scripts/SpawnManager.cs" Line="16" Column="13" />
-      <File FileName="Assets/Scripts/Gun.cs" />
-      <File FileName="Assets/Scripts/Room.cs" />
+      <File FileName="Assets/Scripts/Gun.cs" Line="1" Column="1" />
+      <File FileName="Assets/Scripts/Room.cs" Line="1" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -24,7 +24,7 @@
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.ItemProperties.Assembly-CSharp PreferredExecutionTarget="e226bdb1-c873-406e-a69c-12a542da6b62" />
+  <MonoDevelop.Ide.ItemProperties.Assembly-CSharp PreferredExecutionTarget="c1a559bb-1668-4c92-9602-113e503fd7db" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
