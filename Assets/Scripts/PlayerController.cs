@@ -108,7 +108,9 @@ public class PlayerController : MonoBehaviourPunCallbacks
         }
 
         // 銃を表示する関数の呼び出し
-        SwitchGun();
+        //SwitchGun();
+        // 全プレイヤーで共有できる銃の切り替え
+        photonView.RPC("SetGun", RpcTarget.All, selectedGun);
     }
 
 
@@ -281,9 +283,11 @@ public void PlayerMove()
             }
 
             // 銃を切り替える関数の呼び出し
-            SwitchGun();
-
-        } else if (Input.GetAxisRaw("Mouse ScrollWheel") < 0f)
+            //SwitchGun();
+            // 全プレイヤーで共有できる銃の切り替え
+            photonView.RPC("SetGun", RpcTarget.All, selectedGun);
+        }
+        else if (Input.GetAxisRaw("Mouse ScrollWheel") < 0f)
         {
             selectedGun--;
 
@@ -293,7 +297,9 @@ public void PlayerMove()
             }
 
             // 銃を切り替える関数の呼び出し
-            SwitchGun();
+            //SwitchGun();
+            // 全プレイヤーで共有できる銃の切り替え
+            photonView.RPC("SetGun", RpcTarget.All, selectedGun);
         }
 
         // 数値キー入力で銃の切り替え
@@ -304,7 +310,9 @@ public void PlayerMove()
             {
                 // 銃切り替え
                 selectedGun = i;
-                SwitchGun();
+                //SwitchGun();
+                // 全プレイヤーで共有できる銃の切り替え
+                photonView.RPC("SetGun", RpcTarget.All, selectedGun);
             }
         }
     }
@@ -418,6 +426,18 @@ public void PlayerMove()
         } else
         {
             animator.SetBool("run", false);
+        }
+    }
+
+    // リモート呼び出し可能な、銃切り替え関数
+    [PunRPC] // 他のユーザーからも呼び出し可能になる
+    public void SetGun(int gunNo)
+    {
+        if (gunNo < guns.Count)
+        {
+            selectedGun = gunNo;
+
+            SwitchGun();
         }
     }
 

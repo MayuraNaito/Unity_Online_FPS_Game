@@ -3362,6 +3362,10 @@ PrefabInstance:
       propertyPath: sceneViewId
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 2883554448011856541, guid: ee9ebcbfcb3954a55ae8a93dc8de61aa, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5796301094000554029, guid: ee9ebcbfcb3954a55ae8a93dc8de61aa, type: 3}
       propertyPath: m_RootOrder
       value: 1
@@ -3409,6 +3413,18 @@ PrefabInstance:
     - target: {fileID: 6550586026153285869, guid: ee9ebcbfcb3954a55ae8a93dc8de61aa, type: 3}
       propertyPath: m_Name
       value: Player
+      objectReference: {fileID: 0}
+    - target: {fileID: 6550586026153285869, guid: ee9ebcbfcb3954a55ae8a93dc8de61aa, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7567952509713893358, guid: ee9ebcbfcb3954a55ae8a93dc8de61aa, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8944723393645812140, guid: ee9ebcbfcb3954a55ae8a93dc8de61aa, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
