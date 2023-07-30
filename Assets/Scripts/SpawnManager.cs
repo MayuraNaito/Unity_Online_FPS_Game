@@ -45,5 +45,16 @@ public class SpawnManager : MonoBehaviour
         player = PhotonNetwork.Instantiate(playerPrefab.name, spawnPoint.position, spawnPoint.rotation);
     }
 
+    // 削除とリスポーン
+    public void Die()
+    {
+        // プレイヤーが格納されているか判定
+        if (player != null)
+        {
+            // リスポーン関数を呼ぶ
+            Invoke("SpawnPlayer", 5f);
+        }
+        PhotonNetwork.Destroy(player);
+    }
 
 }

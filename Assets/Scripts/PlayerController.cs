@@ -493,14 +493,15 @@ public void PlayerMove()
         }
     }
 
-    // 死亡関数
+    // 死亡時の処理をする関数
     public void Death(string name, int actor)
     {
         // マイナスになってるかもしれないので0にする
         currentHP = 0;
-        //Debug.Log("死亡したよ");
-        // Death関数を開く
+        // Death関数の呼び出し
         UIManager.UpdateDeathUI(name);
+        // リスポーン関数の呼び出し
+        spawnManager.Die();
     }
 
 }
