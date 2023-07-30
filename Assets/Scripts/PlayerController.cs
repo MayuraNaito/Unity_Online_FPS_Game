@@ -63,10 +63,6 @@ public class PlayerController : MonoBehaviourPunCallbacks
     public GameObject[] playerModel;
     // 銃ホルダー(自分用、他人用)
     public Gun[] gunsHolder, otherGunsHolder;
-    // 最大HP
-    public int maxHP = 100;
-    // 現在HP
-    public int currentHP;
 
     private void Awake()
     {
@@ -79,8 +75,6 @@ public class PlayerController : MonoBehaviourPunCallbacks
     // Start
     private void Start()
     {
-        // 現在HPに最大HPを代入
-        currentHP = maxHP;
         // カメラ格納
         cam = Camera.main;
         // 剛体
@@ -111,9 +105,6 @@ public class PlayerController : MonoBehaviourPunCallbacks
             {
                 guns.Add(gun);
             }
-
-            // HPをスライダーに反映
-            UIManager.UpdateHP(maxHP, currentHP);
         }
 
         // 銃を表示する関数の呼び出し
@@ -372,24 +363,12 @@ public void PlayerMove()
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
             //Debug.Log("当たったオブジェクトは" + hit.collider.gameObject.name);
+            // 弾痕を当たった場所に生成
+            GameObject bulletImpactObject = Instantiate(guns[selectedGun].bulletImpact,
+                hit.point + (hit.normal * 0.02f),
+                Quaternion.LookRotation(hit.normal, Vector3.up));
 
-            // レーザーが当たったオブジェクトがプレイヤーならtrue
-            if (hit.collider.gameObject.tag == "Player")
-            {
-                hit.collider.gameObject.GetPhotonView().RPC("Hit",
-                    RpcTarget.All,
-                    guns[selectedGun].shootDamage,
-                    photonView.Owner.NickName,
-                    PhotonNetwork.LocalPlayer.ActorNumber);
-            } else
-            {
-                // プレイヤー以外に当たった時、当たった場所に生成
-                GameObject bulletImpactObject = Instantiate(guns[selectedGun].bulletImpact,
-                    hit.point + (hit.normal * 0.02f),
-                    Quaternion.LookRotation(hit.normal, Vector3.up));
-
-                Destroy(bulletImpactObject, 10f);
-            }
+            Destroy(bulletImpactObject, 10f);
         }
 
         // 射撃間隔の設定　ゲームの経過時間にインターバルを足しshotTimerに入れる(連続で撃てなくなる)
@@ -442,45 +421,4 @@ public void PlayerMove()
         }
     }
 
-    // 銃切り替え関数
-    [PunRPC] // 全プレイヤー共有
-    public void SetGun(int gunNo)
-    {
-        if (gunNo < guns.Count)
-        {
-            selectedGun = gunNo;
-            SwitchGun();
-        }
-    }
-
-    // 被弾関数
-    [PunRPC] // 全プレイヤー共有
-    public void Hit(int damage, string name, int actor)
-    {
-        // HPを減らす関数の呼び出し
-        ReceiveDamage(name, damage, actor);
-    }
-
-    // HPを減らす関数
-    public void ReceiveDamage(string name, int damage, int actor)
-    {
-        // 自分管理の場合true
-        if (photonView.IsMine)
-        {
-            // HPを減らす
-            currentHP -= damage;
-            // 0以下になったかを判定
-            if (currentHP <= 0)
-            {
-                Death(name, actor);
-            }
-        }
-    }
-
-    // 死亡関数
-    public void Death(string name, int actor)
-    {
-        currentHP = 0;
-        //Debug.Log("死亡したよ");
-    }
 }

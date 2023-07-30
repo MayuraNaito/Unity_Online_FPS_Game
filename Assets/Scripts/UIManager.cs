@@ -5,8 +5,6 @@ public class UIManager : MonoBehaviour
 {
     // 弾薬テキスト
     public Text ammoText;
-    // HPスライダー格納
-    public Slider hpSlider;
 
 
     // テキスト更新用関数
@@ -16,11 +14,5 @@ public class UIManager : MonoBehaviour
         ammoText.text = ammoClip + " / " + ammunition;
     }
 
-    // HP更新関数
-    public void UpdateHP(int maxHP, int currentHP)
-    {
-        hpSlider.maxValue = maxHP;
-        hpSlider.value = currentHP;
-    }
 
 }
