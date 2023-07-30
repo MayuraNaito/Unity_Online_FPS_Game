@@ -2115,6 +2115,7 @@ MonoBehaviour:
   - {fileID: 6074614965050078335}
   - {fileID: 6419315481631335331}
   maxHP: 100
+  hitEffect: {fileID: 8848115688033809520, guid: 758c8358852b54f6b96db5ed3dbaa59b, type: 3}
 --- !u!114 &1933236562686491872
 MonoBehaviour:
   m_ObjectHideFlags: 0
