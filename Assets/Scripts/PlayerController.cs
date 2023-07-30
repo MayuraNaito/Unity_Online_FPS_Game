@@ -66,7 +66,7 @@ public class PlayerController : MonoBehaviourPunCallbacks
     // 最大HP
     public int maxHP = 100;
     // 現在HP
-    private int currentHP;
+    public int currentHP;
 
     private void Awake()
     {
@@ -81,7 +81,6 @@ public class PlayerController : MonoBehaviourPunCallbacks
     {
         // 現在HPに最大HPを代入
         currentHP = maxHP;
-
         // カメラ格納
         cam = Camera.main;
         // 剛体
@@ -105,9 +104,6 @@ public class PlayerController : MonoBehaviourPunCallbacks
             {
                 guns.Add(gun);
             }
-
-            // HPをスライダーに反映
-            UIManager.UpdateHP(maxHP, currentHP);
         } else
         {
             // 表示する方の銃を設定
@@ -115,12 +111,13 @@ public class PlayerController : MonoBehaviourPunCallbacks
             {
                 guns.Add(gun);
             }
+
+            // HPをスライダーに反映
+            UIManager.UpdateHP(maxHP, currentHP);
         }
 
         // 銃を表示する関数の呼び出し
-        //SwitchGun();
-        // 全プレイヤーで共有できる銃の切り替え
-        photonView.RPC("SetGun", RpcTarget.All, selectedGun);
+        SwitchGun();
     }
 
 
@@ -293,11 +290,9 @@ public void PlayerMove()
             }
 
             // 銃を切り替える関数の呼び出し
-            //SwitchGun();
-            // 全プレイヤーで共有できる銃の切り替え
-            photonView.RPC("SetGun", RpcTarget.All, selectedGun);
-        }
-        else if (Input.GetAxisRaw("Mouse ScrollWheel") < 0f)
+            SwitchGun();
+
+        } else if (Input.GetAxisRaw("Mouse ScrollWheel") < 0f)
         {
             selectedGun--;
 
@@ -307,9 +302,7 @@ public void PlayerMove()
             }
 
             // 銃を切り替える関数の呼び出し
-            //SwitchGun();
-            // 全プレイヤーで共有できる銃の切り替え
-            photonView.RPC("SetGun", RpcTarget.All, selectedGun);
+            SwitchGun();
         }
 
         // 数値キー入力で銃の切り替え
@@ -320,9 +313,7 @@ public void PlayerMove()
             {
                 // 銃切り替え
                 selectedGun = i;
-                //SwitchGun();
-                // 全プレイヤーで共有できる銃の切り替え
-                photonView.RPC("SetGun", RpcTarget.All, selectedGun);
+                SwitchGun();
             }
         }
     }
@@ -378,12 +369,11 @@ public void PlayerMove()
         // カメラの中心から光線を作る
         Ray ray = cam.ViewportPointToRay(new Vector2(0.5f, 0.5f));
 
-        // 何かにレーザーが当たったらtrue
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
             //Debug.Log("当たったオブジェクトは" + hit.collider.gameObject.name);
 
-            // レーザーの当たったオブジェクトがプレイヤーならtrue
+            // レーザーが当たったオブジェクトがプレイヤーならtrue
             if (hit.collider.gameObject.tag == "Player")
             {
                 hit.collider.gameObject.GetPhotonView().RPC("Hit",
@@ -393,7 +383,7 @@ public void PlayerMove()
                     PhotonNetwork.LocalPlayer.ActorNumber);
             } else
             {
-                // プレイヤー以外に当たったら弾痕を当たった場所に生成
+                // プレイヤー以外に当たった時、当たった場所に生成
                 GameObject bulletImpactObject = Instantiate(guns[selectedGun].bulletImpact,
                     hit.point + (hit.normal * 0.02f),
                     Quaternion.LookRotation(hit.normal, Vector3.up));
@@ -452,20 +442,19 @@ public void PlayerMove()
         }
     }
 
-    // リモート呼び出し可能な、銃切り替え関数
-    [PunRPC] // 他のユーザーからも呼び出し可能になる
+    // 銃切り替え関数
+    [PunRPC] // 全プレイヤー共有
     public void SetGun(int gunNo)
     {
         if (gunNo < guns.Count)
         {
             selectedGun = gunNo;
-
             SwitchGun();
         }
     }
 
-    // 被弾関数(全プレイヤー共有)
-    [PunRPC] // 他のユーザーからも呼び出し可能になる
+    // 被弾関数
+    [PunRPC] // 全プレイヤー共有
     public void Hit(int damage, string name, int actor)
     {
         // HPを減らす関数の呼び出し
@@ -475,32 +464,23 @@ public void PlayerMove()
     // HPを減らす関数
     public void ReceiveDamage(string name, int damage, int actor)
     {
-        // プレイヤーの管理者が自分かどうか(撃たれたのが自分かどうか)
+        // 自分管理の場合true
         if (photonView.IsMine)
         {
             // HPを減らす
             currentHP -= damage;
-
-            // 0以下になったか判定をする
+            // 0以下になったかを判定
             if (currentHP <= 0)
             {
-                // 死亡関数の呼び出し
                 Death(name, actor);
             }
-
-            // HPをスライダーに反映
-            UIManager.UpdateHP(maxHP, currentHP);
         }
     }
 
     // 死亡関数
     public void Death(string name, int actor)
     {
-        // マイナスになってるかもしれないので0にする
         currentHP = 0;
         //Debug.Log("死亡したよ");
-        // Death関数を開く
-        UIManager.UpdateDeathUI(name);
     }
-
 }
