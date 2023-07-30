@@ -67,6 +67,8 @@ public class PlayerController : MonoBehaviourPunCallbacks
     public int maxHP = 100;
     // 現在HP
     private int currentHP;
+    // 血のエフェクト
+    public GameObject hitEffect;
 
     private void Awake()
     {
@@ -386,6 +388,8 @@ public void PlayerMove()
             // レーザーの当たったオブジェクトがプレイヤーならtrue
             if (hit.collider.gameObject.tag == "Player")
             {
+                PhotonNetwork.Instantiate(hitEffect.name, hit.point, Quaternion.identity);
+
                 hit.collider.gameObject.GetPhotonView().RPC("Hit",
                     RpcTarget.All,
                     guns[selectedGun].shootDamage,
