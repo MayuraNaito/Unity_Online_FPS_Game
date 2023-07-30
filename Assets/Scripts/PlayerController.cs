@@ -105,6 +105,9 @@ public class PlayerController : MonoBehaviourPunCallbacks
             {
                 guns.Add(gun);
             }
+
+            // HPをスライダーに反映
+            UIManager.UpdateHP(maxHP, currentHP);
         } else
         {
             // 表示する方の銃を設定
@@ -484,6 +487,9 @@ public void PlayerMove()
                 // 死亡関数の呼び出し
                 Death(name, actor);
             }
+
+            // HPをスライダーに反映
+            UIManager.UpdateHP(maxHP, currentHP);
         }
     }
 
@@ -492,7 +498,9 @@ public void PlayerMove()
     {
         // マイナスになってるかもしれないので0にする
         currentHP = 0;
-        Debug.Log("死亡したよ");
+        //Debug.Log("死亡したよ");
+        // Death関数を開く
+        UIManager.UpdateDeathUI(name);
     }
 
 }
