@@ -514,7 +514,13 @@ public void PlayerMove()
         // キルデスイベント関数の呼び出し
         gameManager.ScoreGet(PhotonNetwork.LocalPlayer.ActorNumber, 1, 1); // 自分死亡時はデスを増やす
         gameManager.ScoreGet(actor, 0, 1); // 撃ってきた相手はキル数を1増やす
+    }
 
+    public override void OnDisable()
+    {
+        // マウスの表示
+        cursorLock = false;
+        Cursor.lockState = CursorLockMode.None;
     }
 
 }

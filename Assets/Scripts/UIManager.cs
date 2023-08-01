@@ -15,6 +15,8 @@ public class UIManager : MonoBehaviour
     public GameObject scoreboard;
     // PlayerInformation格納
     public PlayerInformation info;
+    // 終了パネル
+    public GameObject endPanel;
 
     // テキスト更新用関数
     public void SettingBulletsText(int ammoClip, int ammunition)
@@ -52,6 +54,12 @@ public class UIManager : MonoBehaviour
     {
         // 表示非表示を切り替える(ヒエラルキー上で表示されていればtrueになるので反転)
         scoreboard.SetActive(!scoreboard.activeInHierarchy);
+    }
+
+    // ゲーム終了画面を表示する関数
+    public void OpenEndPanel()
+    {
+        endPanel.SetActive(true);
     }
 
 }
