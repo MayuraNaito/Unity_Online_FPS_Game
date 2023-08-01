@@ -11970,7 +11970,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -52.37433, y: 41.4633}
+  m_AnchoredPosition: {x: -52.374268, y: 41.463257}
   m_SizeDelta: {x: -681.7155, y: 82.9268}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &884835230
@@ -13835,7 +13835,7 @@ GameObject:
   - component: {fileID: 968644598}
   m_Layer: 0
   m_Name: GameManager
-  m_TagString: Untagged
+  m_TagString: GameManager
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -13852,6 +13852,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef9280fd03bfd4fb4a16224d641730f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerList: []
+  state: 0
 --- !u!4 &968644599
 Transform:
   m_ObjectHideFlags: 0
