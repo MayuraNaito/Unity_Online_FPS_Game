@@ -63,6 +63,14 @@ public class PlayerController : MonoBehaviourPunCallbacks
     public GameObject[] playerModel;
     // 銃ホルダー(自分用、他人用)
     public Gun[] gunsHolder, otherGunsHolder;
+    // 最大HP
+    public int maxHP = 100;
+    // 現在HP
+    private int currentHP;
+    // 血のエフェクト
+    public GameObject hitEffect;
+    // GameManager格納
+    GameManager gameManager;
 
     private void Awake()
     {
@@ -70,11 +78,16 @@ public class PlayerController : MonoBehaviourPunCallbacks
         UIManager = GameObject.FindGameObjectWithTag("UIManager").GetComponent<UIManager>();
         // spawnManager格納
         spawnManager = GameObject.FindGameObjectWithTag("SpawnManager").GetComponent<SpawnManager>();
+        // gameManager格納
+        gameManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameManager>();
     }
 
     // Start
     private void Start()
     {
+        // 現在HPに最大HPを代入
+        currentHP = maxHP;
+
         // カメラ格納
         cam = Camera.main;
         // 剛体
@@ -98,6 +111,9 @@ public class PlayerController : MonoBehaviourPunCallbacks
             {
                 guns.Add(gun);
             }
+
+            // HPをスライダーに反映
+            UIManager.UpdateHP(maxHP, currentHP);
         } else
         {
             // 表示する方の銃を設定
@@ -108,7 +124,9 @@ public class PlayerController : MonoBehaviourPunCallbacks
         }
 
         // 銃を表示する関数の呼び出し
-        SwitchGun();
+        //SwitchGun();
+        // 全プレイヤーで共有できる銃の切り替え
+        photonView.RPC("SetGun", RpcTarget.All, selectedGun);
     }
 
 
@@ -281,9 +299,11 @@ public void PlayerMove()
             }
 
             // 銃を切り替える関数の呼び出し
-            SwitchGun();
-
-        } else if (Input.GetAxisRaw("Mouse ScrollWheel") < 0f)
+            //SwitchGun();
+            // 全プレイヤーで共有できる銃の切り替え
+            photonView.RPC("SetGun", RpcTarget.All, selectedGun);
+        }
+        else if (Input.GetAxisRaw("Mouse ScrollWheel") < 0f)
         {
             selectedGun--;
 
@@ -293,7 +313,9 @@ public void PlayerMove()
             }
 
             // 銃を切り替える関数の呼び出し
-            SwitchGun();
+            //SwitchGun();
+            // 全プレイヤーで共有できる銃の切り替え
+            photonView.RPC("SetGun", RpcTarget.All, selectedGun);
         }
 
         // 数値キー入力で銃の切り替え
@@ -304,7 +326,9 @@ public void PlayerMove()
             {
                 // 銃切り替え
                 selectedGun = i;
-                SwitchGun();
+                //SwitchGun();
+                // 全プレイヤーで共有できる銃の切り替え
+                photonView.RPC("SetGun", RpcTarget.All, selectedGun);
             }
         }
     }
@@ -360,15 +384,30 @@ public void PlayerMove()
         // カメラの中心から光線を作る
         Ray ray = cam.ViewportPointToRay(new Vector2(0.5f, 0.5f));
 
+        // 何かにレーザーが当たったらtrue
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
             //Debug.Log("当たったオブジェクトは" + hit.collider.gameObject.name);
-            // 弾痕を当たった場所に生成
-            GameObject bulletImpactObject = Instantiate(guns[selectedGun].bulletImpact,
-                hit.point + (hit.normal * 0.02f),
-                Quaternion.LookRotation(hit.normal, Vector3.up));
 
-            Destroy(bulletImpactObject, 10f);
+            // レーザーの当たったオブジェクトがプレイヤーならtrue
+            if (hit.collider.gameObject.tag == "Player")
+            {
+                PhotonNetwork.Instantiate(hitEffect.name, hit.point, Quaternion.identity);
+
+                hit.collider.gameObject.GetPhotonView().RPC("Hit",
+                    RpcTarget.All,
+                    guns[selectedGun].shootDamage,
+                    photonView.Owner.NickName,
+                    PhotonNetwork.LocalPlayer.ActorNumber);
+            } else
+            {
+                // プレイヤー以外に当たったら弾痕を当たった場所に生成
+                GameObject bulletImpactObject = Instantiate(guns[selectedGun].bulletImpact,
+                    hit.point + (hit.normal * 0.02f),
+                    Quaternion.LookRotation(hit.normal, Vector3.up));
+
+                Destroy(bulletImpactObject, 10f);
+            }
         }
 
         // 射撃間隔の設定　ゲームの経過時間にインターバルを足しshotTimerに入れる(連続で撃てなくなる)
@@ -419,6 +458,63 @@ public void PlayerMove()
         {
             animator.SetBool("run", false);
         }
+    }
+
+    // リモート呼び出し可能な、銃切り替え関数
+    [PunRPC] // 他のユーザーからも呼び出し可能になる
+    public void SetGun(int gunNo)
+    {
+        if (gunNo < guns.Count)
+        {
+            selectedGun = gunNo;
+
+            SwitchGun();
+        }
+    }
+
+    // 被弾関数(全プレイヤー共有)
+    [PunRPC] // 他のユーザーからも呼び出し可能になる
+    public void Hit(int damage, string name, int actor)
+    {
+        // HPを減らす関数の呼び出し
+        ReceiveDamage(name, damage, actor);
+    }
+
+    // HPを減らす関数
+    public void ReceiveDamage(string name, int damage, int actor)
+    {
+        // プレイヤーの管理者が自分かどうか(撃たれたのが自分かどうか)
+        if (photonView.IsMine)
+        {
+            // HPを減らす
+            currentHP -= damage;
+
+            // 0以下になったか判定をする
+            if (currentHP <= 0)
+            {
+                // 死亡関数の呼び出し
+                Death(name, actor);
+            }
+
+            // HPをスライダーに反映
+            UIManager.UpdateHP(maxHP, currentHP);
+        }
+    }
+
+    // 死亡時の処理をする関数
+    public void Death(string name, int actor)
+    {
+        // マイナスになってるかもしれないので0にする
+        currentHP = 0;
+        // Death関数の呼び出し
+        UIManager.UpdateDeathUI(name);
+        // リスポーン関数の呼び出し
+        spawnManager.Die();
+
+        // キルデスイベント関数の呼び出し
+        gameManager.ScoreGet(PhotonNetwork.LocalPlayer.ActorNumber, 1, 1); // 自分死亡時はデスを増やす
+        gameManager.ScoreGet(actor, 0, 1); // 撃ってきた相手はキル数を1増やす
+
     }
 
 }
