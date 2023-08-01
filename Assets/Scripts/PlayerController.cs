@@ -69,6 +69,8 @@ public class PlayerController : MonoBehaviourPunCallbacks
     private int currentHP;
     // 血のエフェクト
     public GameObject hitEffect;
+    // GameManager格納
+    GameManager gameManager;
 
     private void Awake()
     {
@@ -76,6 +78,8 @@ public class PlayerController : MonoBehaviourPunCallbacks
         UIManager = GameObject.FindGameObjectWithTag("UIManager").GetComponent<UIManager>();
         // spawnManager格納
         spawnManager = GameObject.FindGameObjectWithTag("SpawnManager").GetComponent<SpawnManager>();
+        // gameManager格納
+        gameManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameManager>();
     }
 
     // Start
@@ -506,6 +510,11 @@ public void PlayerMove()
         UIManager.UpdateDeathUI(name);
         // リスポーン関数の呼び出し
         spawnManager.Die();
+
+        // キルデスイベント関数の呼び出し
+        gameManager.ScoreGet(PhotonNetwork.LocalPlayer.ActorNumber, 1, 1); // 自分死亡時はデスを増やす
+        gameManager.ScoreGet(actor, 0, 1); // 撃ってきた相手はキル数を1増やす
+
     }
 
 }
