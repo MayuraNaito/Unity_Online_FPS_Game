@@ -31,7 +31,19 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
 
     // ゲーム状態格納
     public Gamestate state;
+    // UIManager格納
+    UIManager uiManager;
+    // PlayerInformation格納リスト
+    private List<PlayerInformation> playerInfoList = new List<PlayerInformation>();
 
+    // Awake
+    private void Awake()
+    {
+        // UIManagerを格納
+        uiManager = GameObject.FindGameObjectWithTag("UIManager").GetComponent<UIManager>();
+    }
+
+    // Start
     private void Start()
     {
         // ネットワークに繋がっていない時タイトルに戻る
@@ -45,6 +57,22 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
 
             // ゲームの状態を決める
             state = Gamestate.Playing;
+        }
+    }
+
+    // Update
+    private void Update()
+    {
+        // タブキー検知でスコアボードを呼ぶ
+        if (Input.GetKeyDown(KeyCode.Tab))
+        {
+            // 更新しつつスコアボードを開く
+            ShowScoreboard();
+
+        }
+        else if(Input.GetKeyUp(KeyCode.Tab))
+        {
+            uiManager.ChangeScoreUI();
         }
     }
 
@@ -208,6 +236,36 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
                 }
                 break;
             }
+        }
+    }
+
+    // 更新しつつスコアボードを開く関数
+    public void ShowScoreboard()
+    {
+        // スコアボードを開く
+        uiManager.ChangeScoreUI();
+
+        // 現在表示されているスコアを削除
+        foreach (PlayerInformation info in playerInfoList)
+        {
+            // 一旦削除
+            Destroy(info.gameObject);
+        }
+
+        // 初期化
+        playerInfoList.Clear();
+
+        // 参加しているユーザーの数分ループ
+        foreach (PlayerInfo player in playerList)
+        {
+            // スコア表示UIを作成して格納
+            PlayerInformation newPlayerDisplay = Instantiate(uiManager.info, uiManager.info.transform.parent);
+            // UIにプレイヤー情報を反映
+            newPlayerDisplay.SetPlayerDetails(player.name, player.kills, player.deaths);
+            // UIを表示
+            newPlayerDisplay.gameObject.SetActive(true);
+            // リストに格納
+            playerInfoList.Add(newPlayerDisplay);
         }
     }
 

@@ -11,6 +11,10 @@ public class UIManager : MonoBehaviour
     public GameObject deathPanel;
     // デステキスト
     public Text deathText;
+    // スコアボード格納
+    public GameObject scoreboard;
+    // PlayerInformation格納
+    public PlayerInformation info;
 
     // テキスト更新用関数
     public void SettingBulletsText(int ammoClip, int ammunition)
@@ -41,6 +45,13 @@ public class UIManager : MonoBehaviour
     public void CloseDeathUI()
     {
         deathPanel.SetActive(false);
+    }
+
+    // スコアボードを開く関数
+    public void ChangeScoreUI()
+    {
+        // 表示非表示を切り替える(ヒエラルキー上で表示されていればtrueになるので反転)
+        scoreboard.SetActive(!scoreboard.activeInHierarchy);
     }
 
 }
