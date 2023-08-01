@@ -35,6 +35,12 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     UIManager uiManager;
     // PlayerInformation格納リスト
     private List<PlayerInformation> playerInfoList = new List<PlayerInformation>();
+    // クリアまでのキル数
+    [Tooltip("クリアまでのキル数")]
+    public int targetNumber = 3;
+    // クリアパネルを表示している時間
+    [Tooltip("クリアパネルの表示時間")]
+    public float waitAfterEnding = 5f;
 
     // Awake
     private void Awake()
@@ -195,6 +201,9 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
 
             playerList.Add(player);
         }
+
+        // ゲームの状態を判定する関数の呼び出し
+        StateCheck();
     }
 
     // キル数やデス数を取得してイベント発生させる関数(どのユーザーかの番号、キルかデスかの判定数値、加算する用の数値)
@@ -237,6 +246,8 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
                 break;
             }
         }
+        // ゲームクリア条件を達成したかどうか確認
+        TargetScoreCheck();
     }
 
     // 更新しつつスコアボードを開く関数
@@ -267,6 +278,83 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
             // リストに格納
             playerInfoList.Add(newPlayerDisplay);
         }
+    }
+
+    // ゲームクリア条件を達成したかどうか確認する関数
+    public void TargetScoreCheck()
+    {
+        bool clear = false;
+
+        // クリア条件達成者がいるか
+        foreach (PlayerInfo player in playerList)
+        {
+            // キル数判定
+            if (player.kills >= targetNumber && targetNumber > 0)
+            {
+                clear = true;
+                break;
+            }
+        }
+
+        // ゲーム終了時
+        if (clear)
+        {
+            // 自分がマスターか、ゲームの状態が終了していないか判定
+            if (PhotonNetwork.IsMasterClient && state != Gamestate.Ending)
+            {
+                // ゲームの状態を変更
+                state = Gamestate.Ending;
+
+                // ゲームプレイ状態を共有
+                ListPlayersGet();
+            }
+        }
+    }
+
+    // ゲームの状態を判定する関数
+    public void StateCheck()
+    {
+        // ゲームが終了している時
+        if (state == Gamestate.Ending)
+        {
+            EndGame();
+        }
+    }
+
+    // ゲーム終了関数
+    public void EndGame()
+    {
+        // マスターの時全てのネットワークオブジェクトの削除
+        if (PhotonNetwork.IsMasterClient)
+        {
+            PhotonNetwork.DestroyAll();
+        }
+
+        // ゲーム終了パネルを表示
+        uiManager.OpenEndPanel();
+        // スコアパネルを更新しながら表示する関数の呼び出し
+        ShowScoreboard();
+        // カーソルの表示
+        Cursor.lockState = CursorLockMode.None;
+        // 終了後の処理
+        Invoke("ProcessingAfterCompletion", waitAfterEnding);
+    }
+
+    // 終了後の処理関数
+    private void ProcessingAfterCompletion()
+    {
+        // シーンの動機設定を解除
+        PhotonNetwork.AutomaticallySyncScene = false;
+
+        // ルームを抜ける
+        PhotonNetwork.LeaveRoom();
+    }
+
+    // ルームを抜けた時に呼ばれる関数
+    public override void OnLeftRoom()
+    {
+        base.OnLeftRoom();
+        SceneManager.LoadScene(0); // タイトル画面に戻る
     }
 
 }
