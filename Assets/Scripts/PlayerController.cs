@@ -72,6 +72,7 @@ public class PlayerController : MonoBehaviourPunCallbacks
     // GameManager格納
     GameManager gameManager;
 
+
     private void Awake()
     {
         // UIManager格納
@@ -155,7 +156,7 @@ public class PlayerController : MonoBehaviourPunCallbacks
 
         // 覗き込み関数の呼び出し
         Aim();
-        // 射撃ボタン検知関数の帯だし
+        // 射撃ボタン検知関数の呼び出し
         Fire();
         // リロード関数の呼び出し
         Reload();
@@ -165,6 +166,11 @@ public class PlayerController : MonoBehaviourPunCallbacks
         UpdateCursorLock();
         // アニメーション遷移関数の呼び出し
         AnimatorSet();
+        // 銃声を止める関数の呼び出し(クリックが外れた時かアサルトライフルの弾がなくなった時)
+        if (Input.GetMouseButtonUp(0) || ammoClip[2] <= 0)
+        {
+            photonView.RPC("SoundStop", RpcTarget.All);
+        }
     }
 
     // FixedUpdate
@@ -367,11 +373,16 @@ public void PlayerMove()
     // 射撃ボタン検知関数
     public void Fire()
     {
-        // 撃ち出せるのか判定(マウスがクリックされているか、マガジンに弾があるか、)
+        // 撃ち出せるのか判定(クリックされているか、マガジンに弾があるか、射撃間隔以上か)
         if (Input.GetMouseButton(0) && ammoClip[selectedGun] > 0 && Time.time > shotTimer)
         {
             // 弾を撃ち出す関数の呼び出し
             FiringBullet();
+        }
+        else if (Input.GetMouseButton(0) && ammoClip[selectedGun] <= 0 && Time.time > shotTimer)
+        {
+            // マガジンに弾が0の時は弾切れ音の再生
+            guns[selectedGun].EmptySound();
         }
     }
 
@@ -410,8 +421,11 @@ public void PlayerMove()
             }
         }
 
-        // 射撃間隔の設定　ゲームの経過時間にインターバルを足しshotTimerに入れる(連続で撃てなくなる)
-        shotTimer = Time.time + guns[selectedGun].shootInterval;
+    // 射撃間隔の設定　ゲームの経過時間にインターバルを足しshotTimerに入れる(連続で撃てなくなる)
+    shotTimer = Time.time + guns[selectedGun].shootInterval;
+
+        // 音を鳴らす関数の呼び出し(全プレイヤー共有)
+        photonView.RPC("SoundGeneration", RpcTarget.All);
     }
 
     // リロード関数
@@ -521,6 +535,28 @@ public void PlayerMove()
         // マウスの表示
         cursorLock = false;
         Cursor.lockState = CursorLockMode.None;
+    }
+
+    // 音を鳴らす関数
+    [PunRPC] // 共有
+    public void SoundGeneration()
+    {
+        // どの銃を装備しているのか判定(0がハンドガン、1がショットガン、2がアサルトライフル)
+        if (selectedGun == 2)
+        {
+            guns[selectedGun].LoopON_SubmachineGun();
+        }
+        else
+        {
+            guns[selectedGun].SoundGunShot();
+        }
+    }
+
+    // 音を止める関数
+    [PunRPC] // 共有
+    public void SoundStop()
+    {
+        guns[2].LoopOFF_SubmachineGun();
     }
 
 }
