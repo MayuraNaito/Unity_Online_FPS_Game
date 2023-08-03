@@ -71,9 +71,6 @@ public class PlayerController : MonoBehaviourPunCallbacks
     public GameObject hitEffect;
     // GameManager格納
     GameManager gameManager;
-    // ゲームを終了するボタンと戻るボタンに対してのフラグ
-    private bool isExitButtonFlg = false;
-    private bool isBackButtonFlg = false;
     // 設定画面を開いている時にプレイ画面の入力受付判定用フラグ
     private bool isControlOpen = false;
 

@@ -399,4 +399,15 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         PhotonNetwork.LoadLevel(levelToPlay);
     }
 
+    // ゲーム終了関数
+    public void Quit()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        // ビルドしたアプリケーションを終了
+        Application.Quit();
+#endif
+    }
+
 }
