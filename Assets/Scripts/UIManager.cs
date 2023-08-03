@@ -17,6 +17,14 @@ public class UIManager : MonoBehaviour
     public PlayerInformation info;
     // 終了パネル
     public GameObject endPanel;
+    // 設定パネル
+    public GameObject controlPanel;
+    // 設定画面の終了と戻るボタン
+    [HideInInspector]
+    public bool exitButtonFlg = false;
+    [HideInInspector]
+    public bool backButtonFlg = false;
+
 
     // テキスト更新用関数
     public void SettingBulletsText(int ammoClip, int ammunition)
@@ -60,6 +68,33 @@ public class UIManager : MonoBehaviour
     public void OpenEndPanel()
     {
         endPanel.SetActive(true);
+    }
+
+    // 設定画面を表示する関数
+    public void OpenControlPanel()
+    {
+        controlPanel.SetActive(true);
+    }
+
+    // 設定画面を非表示にする関数
+    public void CloseControlPanel()
+    {
+        controlPanel.SetActive(false);
+        // フラグのリセット
+        exitButtonFlg = false;
+        backButtonFlg = false;
+    }
+
+    // 設定画面のゲーム終了ボタン用イベント関数
+    public void OnExitButton()
+    {
+        exitButtonFlg = true;
+    }
+
+    // 設定画面の戻るボタン用イベント関数
+    public void OnBackButton()
+    {
+        backButtonFlg = true;
     }
 
 }
