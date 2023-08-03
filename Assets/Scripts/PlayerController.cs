@@ -54,7 +54,7 @@ public class PlayerController : MonoBehaviourPunCallbacks
     [Tooltip("マガジンに入る最大の数")]
     public int[] maxAmmoClip;
     // UIManager格納用
-    private UIManager UIManager;
+    private UIManager uiManager;
     // SpawnManager格納
     private SpawnManager spawnManager;
     // アニメーター
@@ -71,12 +71,17 @@ public class PlayerController : MonoBehaviourPunCallbacks
     public GameObject hitEffect;
     // GameManager格納
     GameManager gameManager;
+    // ゲームを終了するボタンと戻るボタンに対してのフラグ
+    private bool isExitButtonFlg = false;
+    private bool isBackButtonFlg = false;
+    // 設定画面を開いている時にプレイ画面の入力受付判定用フラグ
+    private bool isControlOpen = false;
 
 
     private void Awake()
     {
         // UIManager格納
-        UIManager = GameObject.FindGameObjectWithTag("UIManager").GetComponent<UIManager>();
+        uiManager = GameObject.FindGameObjectWithTag("UIManager").GetComponent<UIManager>();
         // spawnManager格納
         spawnManager = GameObject.FindGameObjectWithTag("SpawnManager").GetComponent<SpawnManager>();
         // gameManager格納
@@ -93,8 +98,9 @@ public class PlayerController : MonoBehaviourPunCallbacks
         cam = Camera.main;
         // 剛体
         rb = GetComponent<Rigidbody>();
-        // カーソル関数の呼び出し
-        UpdateCursorLock();
+        // 初期状態でカーソルをロック
+        cursorLock = true;
+        Cursor.lockState = CursorLockMode.Locked;
         // ランダムな位置でスポーンさせる関数の呼び出し
         //transform.position = spawnManager.GetSpawnPoint().position;
         // 銃を扱うリストの初期化
@@ -114,7 +120,7 @@ public class PlayerController : MonoBehaviourPunCallbacks
             }
 
             // HPをスライダーに反映
-            UIManager.UpdateHP(maxHP, currentHP);
+            uiManager.UpdateHP(maxHP, currentHP);
         } else
         {
             // 表示する方の銃を設定
@@ -136,6 +142,12 @@ public class PlayerController : MonoBehaviourPunCallbacks
     {
         // 自分のプレイヤーオブジェクトだけ操作する
         if (!photonView.IsMine)
+        {
+            return;
+        }
+
+        // 設定画面を開いている時はプレイ画面を停止させる
+        if (isControlOpen && !uiManager.exitButtonFlg && !uiManager.backButtonFlg)
         {
             return;
         }
@@ -162,8 +174,8 @@ public class PlayerController : MonoBehaviourPunCallbacks
         Reload();
         // 武器の変更キー検知関数の呼び出し
         SwitchingGuns();
-        // カーソル関数の呼び出し
-        UpdateCursorLock();
+        // 設定画面とカーソル表示関数の呼び出し
+        SelectControlPanel();
         // アニメーション遷移関数の呼び出し
         AnimatorSet();
         // 銃声を止める関数の呼び出し(クリックが外れた時かアサルトライフルの弾がなくなった時)
@@ -183,7 +195,7 @@ public class PlayerController : MonoBehaviourPunCallbacks
         }
 
         // テキスト更新関数の呼び出し
-        UIManager.SettingBulletsText(ammoClip[selectedGun], ammunition[selectedGun]);
+        uiManager.SettingBulletsText(ammoClip[selectedGun], ammunition[selectedGun]);
     }
 
 
@@ -271,23 +283,32 @@ public void PlayerMove()
         }
     }
 
-    // カーソル表示切り替え
-    public void UpdateCursorLock()
+    // カーソルと設定画面の表示非表示関数
+    public void SelectCursorAndControl()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        // エスケープキーが押された時、または戻るボタンが押された時
+        if (Input.GetKeyDown(KeyCode.Escape) || uiManager.backButtonFlg)
         {
-            cursorLock = false; // 表示
-        } else if (Input.GetMouseButton(0))
-        {
-            cursorLock = true; // 非表示
-        }
+            // カーソルロックを表示非表示
+            cursorLock = !cursorLock;
 
-        if (cursorLock)
-        {
-            Cursor.lockState = CursorLockMode.Locked; // カーソルを中央にし非表示
-        } else
-        {
-            Cursor.lockState = CursorLockMode.None;
+            if (!cursorLock)
+            {
+                OpenControlPanel();
+                // 設定画面とカーソルを表示
+                uiManager.OpenControlPanel();
+                Cursor.lockState = CursorLockMode.None;
+            }
+            else if (cursorLock || uiManager.backButtonFlg)
+            {
+                CloseControlPanel();
+                // 設定画面とカーソルを非表示
+                uiManager.CloseControlPanel();
+                Cursor.lockState = CursorLockMode.Locked;
+            }
+
+            // 戻るボタンのフラグをリセット
+            uiManager.backButtonFlg = false;
         }
     }
 
@@ -511,7 +532,7 @@ public void PlayerMove()
             }
 
             // HPをスライダーに反映
-            UIManager.UpdateHP(maxHP, currentHP);
+            uiManager.UpdateHP(maxHP, currentHP);
         }
     }
 
@@ -521,7 +542,7 @@ public void PlayerMove()
         // マイナスになってるかもしれないので0にする
         currentHP = 0;
         // Death関数の呼び出し
-        UIManager.UpdateDeathUI(name);
+        uiManager.UpdateDeathUI(name);
         // リスポーン関数の呼び出し
         spawnManager.Die();
 
@@ -557,6 +578,53 @@ public void PlayerMove()
     public void SoundStop()
     {
         guns[2].LoopOFF_SubmachineGun();
+    }
+
+    // ゲーム終了する関数
+    public void ExitGame()
+    {
+        if (PhotonNetwork.InRoom) // 部屋に入室しているか確認
+        {
+            // プレイヤーリストからプレイヤー削除
+            gameManager.OutPlayerGet(PhotonNetwork.LocalPlayer.ActorNumber);
+
+            // シーンの同期設定
+            PhotonNetwork.AutomaticallySyncScene = false;
+
+            // ルームを抜ける
+            PhotonNetwork.LeaveRoom();
+        }
+    }
+
+    // 設定画面での処理を判定する関数
+    public void SelectControlPanel()
+    {
+        // 設定画面とカーソルの表示関数の呼び出し
+        SelectCursorAndControl();
+        // 終了ボタンが押された場合
+        if (uiManager.exitButtonFlg)
+        {
+            ExitGame();
+        }
+
+        // エスケープキーか戻るボタンが押された場合
+        if (Input.GetKeyDown(KeyCode.Escape) && uiManager.backButtonFlg)
+        {
+            // 設定画面を閉じる関数の呼び出し
+            uiManager.CloseControlPanel();
+        }
+    }
+
+    // コントロールパネルを開いている時の関数
+    public void OpenControlPanel()
+    {
+        isControlOpen = true;
+    }
+
+    // コントロールパネルを閉じている時の関数
+    public void CloseControlPanel()
+    {
+        isControlOpen = false;
     }
 
 }

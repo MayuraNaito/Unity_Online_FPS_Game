@@ -357,6 +357,25 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
         SceneManager.LoadScene(0); // タイトル画面に戻る
     }
 
+    // プレイヤー情報を管理しているリストからプレイヤー情報を消す関数
+    public void OutPlayerGet(int actor)
+    {
+        // 情報の削除
+        for (int i = 0; i < playerList.Count; i++)
+        {
+            // 管理番号が等しいか判定
+            if (playerList[i].actor == actor)
+            {
+                // 削除
+                playerList.RemoveAt(i);
+                break;
+            }
+        }
+
+        // プレイヤーの情報を更新して表示する関数の呼び出し
+        ListPlayersGet();
+    }
+
 }
 
 // プレイヤーの情報を扱うクラス
