@@ -253,10 +253,11 @@ public void PlayerMove()
     // ジャンプ用
     public void Jump()
     {
-        // プレイヤーが地面に接しており、スペースが押された時
-        if (IsGround() && Input.GetKeyDown(KeyCode.Space))
+        // スペースが押された時
+        if (Input.GetKeyDown(KeyCode.Space))
         {
             rb.AddForce(jumpForce, ForceMode.Impulse);
+            animator.SetTrigger("jump"); // ジャンプトリガーをON
         }
     }
 
@@ -421,6 +422,7 @@ public void PlayerMove()
             // レーザーの当たったオブジェクトがプレイヤーならtrue
             if (hit.collider.gameObject.tag == "Player")
             {
+                // 当たった場所からヒットエフェクトを再生
                 PhotonNetwork.Instantiate(hitEffect.name, hit.point, Quaternion.identity);
 
                 hit.collider.gameObject.GetPhotonView().RPC("Hit",
@@ -510,6 +512,8 @@ public void PlayerMove()
     {
         // HPを減らす関数の呼び出し
         ReceiveDamage(name, damage, actor);
+
+        animator.SetTrigger("hit");
     }
 
     // HPを減らす関数

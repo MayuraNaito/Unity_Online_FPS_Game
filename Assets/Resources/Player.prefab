@@ -2172,6 +2172,9 @@ MonoBehaviour:
   - Type: 4
     SynchronizeType: 1
     Name: run
+  - Type: 9
+    SynchronizeType: 1
+    Name: jump
   m_SynchronizeLayers:
   - SynchronizeType: 0
     LayerIndex: 0
@@ -2563,7 +2566,7 @@ Transform:
   - {fileID: 637497219207479298}
   - {fileID: 3897032490284021488}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &7776020188761213090
 MeshFilter:
